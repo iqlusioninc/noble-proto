@@ -1,0 +1,34 @@
+[workspace]
+members = [
+    # "noble-aura-proto",
+    # "noble-dollar-proto",
+    # "noble-fiattokenfactory-proto",
+    # "noble-forwarding-proto",
+    # "noble-halo-proto",
+    # "noble-cctp-proto",
+    "proto-build",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Zaki Manian <zaki@iqlusion.io>"]
+edition = "2024"
+rust-version = "1.69.0"
+license = "Apache-2.0"
+homepage = ""
+repository = "https://github.com/iqlusioninc/noble-proto"
+documentation = "https://github.com/iqlusioninc/noble-proto#readme"
+keywords = ["noble", "protobuf"]
+
+[workspace.dependencies]
+cosmos-sdk-proto = { version = "0.19", default-features = false }
+prost = "0.11"
+prost-build = "0.11"
+prost-types = "0.11"
+regex = "1"
+tendermint-proto = "0.33"
+tokio = "1"
+tonic = { version = "0.9", default-features = false }
+tonic-build = "0.9"
+walkdir = "2"

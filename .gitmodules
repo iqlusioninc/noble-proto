@@ -1,0 +1,21 @@
+[submodule "dollar"]
+	path = dollar
+	url = https://github.com/noble-assets/dollar.git
+[submodule "swap"]
+	path = swap
+	url = https://github.com/noble-assets/swap.git
+[submodule "aura"]
+	path = aura
+	url = https://github.com/noble-assets/aura.git
+[submodule "halo"]
+	path = halo
+	url = https://github.com/noble-assets/halo.git
+[submodule "forwarding"]
+	path = forwarding
+	url = https://github.com/noble-assets/forwarding.git
+[submodule "noble-cctp"]
+	path = noble-cctp
+	url = https://github.com/circlefin/noble-cctp.git
+[submodule "fiattokenfactory"]
+	path = fiattokenfactory
+	url = https://github.com/circlefin/noble-fiattokenfactory
