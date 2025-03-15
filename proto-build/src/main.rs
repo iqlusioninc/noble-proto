@@ -23,7 +23,11 @@ static QUIET: AtomicBool = AtomicBool::new(false);
 const MODULE_MAPPINGS: &[(&str, &str, &str)] = &[
     ("noble-aura-proto", "aura", "../aura/"),
     ("noble-dollar-proto", "dollar", "../dollar/"),
-    ("noble-fiattokenfactory-proto", "fiattokenfactory", "../fiattokenfactory/"),
+    (
+        "noble-fiattokenfactory-proto",
+        "fiattokenfactory",
+        "../fiattokenfactory/",
+    ),
     ("noble-forwarding-proto", "forwarding", "../forwarding/"),
     ("noble-halo-proto", "halo", "../halo/"),
     ("noble-cctp-proto", "cctp", "../noble-cctp/"),
@@ -66,7 +70,7 @@ fn main() {
     for &(crate_name, proto_name, module_dir) in MODULE_MAPPINGS {
         let proto_dir = Path::new(module_dir).join("proto");
         let out_tmp_dir = tmp_build_dir.join(proto_name);
-        let final_out_dir = format!("../../{}/src/prost", crate_name);
+        let final_out_dir = format!("../{}/src/prost/{}", crate_name, proto_name);
         
         fs::create_dir_all(&out_tmp_dir).unwrap();
         
@@ -106,13 +110,17 @@ fn run_cmd(cmd: impl AsRef<OsStr>, args: impl IntoIterator<Item = impl AsRef<OsS
         process::Stdio::inherit()
     };
 
-    let exit_status = 
-        process::Command::new(&cmd).args(args).stdout(stdout).status().unwrap_or_else(|e| match e
-            .kind()
-        {
+    let exit_status =process::Command::new(&cmd)
+        .args(args)
+        .stdout(stdout)
+        .status()
+        .unwrap_or_else(|e| match e.kind() {
             io::ErrorKind::NotFound => {
-                panic!("error running '{:?}': command not found. Is it installed?", cmd.as_ref())
-            },
+                panic!(
+                    "error running '{:?}': command not found. Is it installed?",
+                    cmd.as_ref()
+                )
+            }
             _ => panic!("error running '{:?}': {:?}", cmd.as_ref(), e),
         });
 
@@ -131,7 +139,10 @@ fn run_git(args: impl IntoIterator<Item = impl AsRef<OsStr>>) {
 fn run_rustfmt(dir: &Path) {
     info!("Running rustfmt on prost/tonic-generated code");
 
-    let mut args = ["--edition", "2021"].iter().map(Into::into).collect::<Vec<OsString>>();
+    let mut args = ["--edition", "2021"]
+        .iter()
+        .map(Into::into)
+        .collect::<Vec<OsString>>();
 
     args.extend(
         WalkDir::new(dir)
@@ -150,42 +161,30 @@ fn update_submodules() {
     run_git(["submodule", "update", "--init", "--recursive"]);
 }
 
+fn run_buf(config: &str, proto_path: impl AsRef<Path>, out_dir: impl AsRef<Path>) {
+    run_cmd(
+        "buf",
+        [
+            "generate",
+            "--template",
+            config,
+            "--include-imports",
+            "-o",
+            &out_dir.as_ref().display().to_string(),
+            &proto_path.as_ref().display().to_string(),
+        ],
+    );
+}
+
 fn compile_protos_and_services(proto_path: &Path, out_dir: &Path) {
     info!(
         "Compiling .proto files to Rust into '{}'...",
         out_dir.display()
     );
 
-    let mut config = prost_build::Config::default();
-    config.out_dir(out_dir);
-
-    // Find all proto files
-    let mut protos: Vec<PathBuf> = vec![];
-    protos.append(
-        &mut WalkDir::new(proto_path)
-            .into_iter()
-            .filter_map(|e| e.ok())
-            .filter(|e| {
-                e.file_type().is_file()
-                    && e.path().extension().is_some()
-                    && e.path().extension().unwrap() == "proto"
-            })
-            .map(|e| e.into_path())
-            .collect(),
-    );
-
-    // Use prost_build to compile the protos
-    if !protos.is_empty() {
-        let proto_include_paths: Vec<PathBuf> = vec![proto_path.to_path_buf()];
-        
-        tonic_build::configure()
-            .build_client(true)
-            .build_server(false)
-            .format(true)
-            .out_dir(out_dir)
-            .compile_with_config(config, &protos, &proto_include_paths)
-            .unwrap();
-    }
+    // Compile all of the proto files, along with grpc service clients
+    info!("Compiling proto definitions and clients for GRPC services!");
+    run_buf("buf.gen.yaml", proto_path, out_dir);
 
     info!("=> Done!");
 }
@@ -195,6 +194,10 @@ fn copy_generated_files(from_dir: &Path, to_dir: &Path) {
 
     // Remove old compiled files
     remove_dir_all(to_dir).unwrap_or_default();
+
+    // Create the necessary parent directories
+    let parent_dir = to_dir.parent().unwrap();
+    create_dir_all(parent_dir).unwrap();
     create_dir_all(to_dir).unwrap();
 
     let mut filenames = Vec::new();
@@ -226,7 +229,7 @@ fn copy_and_patch(src: impl AsRef<Path>, dest: impl AsRef<Path>) -> io::Result<(
     const REPLACEMENTS: &[(&str, &str)] = &[
         // Use `tendermint-proto` proto definitions
         ("(super::)+tendermint", "tendermint_proto"),
-        // Use cosmos_sdk_proto for cosmos types 
+        // Use cosmos_sdk_proto for cosmos types
         ("(super::)+cosmos", "cosmos_sdk_proto::cosmos"),
         // Feature-gate gRPC client modules
         (
@@ -271,3 +274,4 @@ fn copy_and_patch(src: impl AsRef<Path>, dest: impl AsRef<Path>) -> io::Result<(
 
     fs::write(dest, &contents)
 }
+
