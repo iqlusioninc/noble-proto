@@ -1,11 +1,11 @@
 [workspace]
 members = [
-    # "noble-aura-proto",
-    # "noble-dollar-proto",
-    # "noble-fiattokenfactory-proto",
-    # "noble-forwarding-proto",
+    "noble-aura-proto",
+    "noble-dollar-proto",
+    "noble-fiattokenfactory-proto",
+    "noble-forwarding-proto",
     "noble-halo-proto",
-    # "noble-cctp-proto",
+    "noble-cctp-proto",
     "proto-build",
 ]
 resolver = "2"
@@ -27,7 +27,7 @@ prost = "0.13"
 prost-build = "0.13"
 prost-types = "0.13"
 regex = "1"
-tendermint-proto = "0.33"
+tendermint-proto = "0.40"
 tokio = "1"
 tonic = { version = "0.12", default-features = false }
 tonic-build = "0.12"

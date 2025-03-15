@@ -1,0 +1,27 @@
+[package]
+name = "noble-cctp-proto"
+version = "0.1.0"
+authors = ["Zaki Manian <zaki@iqlusion.io>"]
+edition = "2021"
+description = "Rust implementation of Noble's Halo Protocol proto definitions"
+license = "Apache-2.0"
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[features]
+default = ["grpc-transport"]
+grpc = ["tonic", "cosmos-sdk-proto/grpc"]
+grpc-transport = ["grpc", "tonic/transport", "cosmos-sdk-proto/grpc-transport"]
+
+[dependencies]
+cosmos-sdk-proto = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+tendermint-proto = { workspace = true }
+tonic = { workspace = true, optional = true, features = ["codegen", "prost"] }
+serde = { workspace = true }
+pbjson = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
